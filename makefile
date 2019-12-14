@@ -1,13 +1,18 @@
-export FP_TYPE ?= float
+FP_TYPE ?= float
 CONFIG = Debug
+CC ?= gcc
+AR ?= ar
 
 PREFIX=/usr
 GVPS_PREFIX = /usr
-CC ?= $(CROSS)gcc
-AR = $(CROSS)ar
 CFLAGS_COMMON = -I$(GVPS_PREFIX)/include -DFP_TYPE=$(FP_TYPE) -std=c99 -Wall -fPIC $(CFLAGSEXT)
-CFLAGS_DBG = $(CFLAGS_COMMON) -Og -g
-CFLAGS_REL = $(CFLAGS_COMMON) -Ofast
+ifeq ($(CXX), emcc)
+  CFLAGS_DBG = $(CFLAGS_COMMON) -O1 -g -D_DEBUG
+  CFLAGS_REL = $(CFLAGS_COMMON) -O3
+else
+  CFLAGS_DBG = $(CFLAGS_COMMON) -Og -g -D_DEBUG
+  CFLAGS_REL = $(CFLAGS_COMMON) -Ofast
+endif
 ifeq ($(CONFIG), Debug)
   CFLAGS = $(CFLAGS_DBG)
 else
@@ -19,11 +24,27 @@ OBJS = $(OUT_DIR)/math-funcs.o $(OUT_DIR)/yin.o $(OUT_DIR)/pyin.o
 LIBS =
 
 default: $(OUT_DIR)/libpyin.a
+
+ifeq ($(CXX), emcc)
+test: $(OUT_DIR)/pyin-test.html
+	emrun $(OUT_DIR)/pyin-test.html test/vaiueo2d.wav
+
+$(OUT_DIR)/pyin-test.html: $(OUT_DIR)/libpyin.a \
+  test/test.c external/matlabfunctions.c $(GVPS_PREFIX)/lib/libgvps.a
+	$(CC) $(CFLAGS) -o $(OUT_DIR)/pyin-test.html \
+	  test/test.c external/matlabfunctions.c $(OUT_DIR)/libpyin.a \
+	  $(GVPS_PREFIX)/lib/libgvps.a -lm \
+	  --preload-file test/vaiueo2d.wav --emrun
+else
 test: $(OUT_DIR)/pyin-test
 	$(OUT_DIR)/pyin-test test/vaiueo2d.wav
 
-$(OUT_DIR)/pyin-test: $(OUT_DIR)/libpyin.a test/test.c external/matlabfunctions.c $(GVPS_PREFIX)/lib/libgvps.a
-	$(CC) $(CFLAGS) -o $(OUT_DIR)/pyin-test test/test.c external/matlabfunctions.c $(OUT_DIR)/libpyin.a $(GVPS_PREFIX)/lib/libgvps.a -lm
+$(OUT_DIR)/pyin-test: $(OUT_DIR)/libpyin.a \
+  test/test.c external/matlabfunctions.c $(GVPS_PREFIX)/lib/libgvps.a
+	$(CC) $(CFLAGS) -o $(OUT_DIR)/pyin-test \
+	  test/test.c external/matlabfunctions.c $(OUT_DIR)/libpyin.a \
+	  $(GVPS_PREFIX)/lib/libgvps.a -lm
+endif
 
 $(OUT_DIR)/libpyin.a: $(OBJS)
 	$(AR) $(ARFLAGS) $(OUT_DIR)/libpyin.a $(OBJS) $(LIBS)
