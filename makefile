@@ -5,7 +5,10 @@ AR ?= ar
 
 PREFIX=/usr
 GVPS_PREFIX = /usr
-CFLAGS_COMMON = -I$(GVPS_PREFIX)/include -DFP_TYPE=$(FP_TYPE) -std=c99 -Wall -fPIC $(CFLAGSEXT)
+
+CFLAGS_PLAT =
+CFLAGS_COMMON = -I$(GVPS_PREFIX)/include -DFP_TYPE=$(FP_TYPE) -std=c99 -Wall \
+  -fPIC $(CFLAGS_PLAT)
 ifeq ($(CXX), emcc)
   CFLAGS_DBG = $(CFLAGS_COMMON) -O1 -g -D_DEBUG
   CFLAGS_REL = $(CFLAGS_COMMON) -O3
