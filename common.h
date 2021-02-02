@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
 #include <math.h>
-#include <unistd.h>
+#include <stdint.h>
 
 #ifdef max
 #undef max
